@@ -2,12 +2,12 @@ name: Build Croptix on Update
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # daily at 00:00 UTC
-  workflow_dispatch:     # manual trigger button
+    - cron: "0 0 * * *"   # daily
+  workflow_dispatch:      # manual trigger
 
 permissions:
   contents: write
-  
+
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
@@ -71,12 +71,23 @@ jobs:
         working-directory: croptix
         run: bun run build:v2
 
-      - name: Find ZIP in dist
+      # ✅ FIXED: correct folder
+      - name: Find ZIP in build folder
         if: steps.compare.outputs.changed == 'true'
         id: findzip
         run: |
-          FILE=$(ls croptix/dist/*.zip | head -n 1)
+          FILE=$(find croptix/build -name "*.zip" | head -n 1)
+          echo "Found ZIP: $FILE"
           echo "zipfile=$FILE" >> $GITHUB_OUTPUT
+
+      # ✅ safety check
+      - name: Fail if ZIP not found
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          if [ -z "${{ steps.findzip.outputs.zipfile }}" ]; then
+            echo "No ZIP file found!"
+            exit 1
+          fi
 
       - name: Create Release and upload ZIP
         if: steps.compare.outputs.changed == 'true'
