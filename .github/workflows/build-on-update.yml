@@ -5,6 +5,9 @@ on:
     - cron: "0 0 * * *"  # daily at 00:00 UTC
   workflow_dispatch:     # manual trigger button
 
+permissions:
+  contents: write
+  
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
